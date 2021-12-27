@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+var bodyParser = require("body-parser");
+app.use(bodyParser.json());
 
 const userModel = require("./models");
 
@@ -8,7 +10,12 @@ app.get("/", (req, res) => {
 });
 
 app.post("/add_user", async (request, response) => {
-  const user = new userModel(request.body);
+  let obj = {
+    name: request.body.name,
+    email: request.body.email,
+    age: request.body.age,
+  };
+  const user = new userModel(obj);
 
   try {
     await user.save();

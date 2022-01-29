@@ -11,11 +11,15 @@ mongoose.connect(process.env.DATABASE, {
   useUnifiedTopology: true,
 });
 
+//console.log("log: ", process.env.DATABASE);
+
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", function () {
   console.log("Connected successfully");
 });
+
+// console.log("log: ", db.collection);
 
 const server = app.listen(3000, () => {
   console.log("Server is running at port:   ", server.address().port);

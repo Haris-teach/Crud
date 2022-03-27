@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/signUp", async (request, response) => {
-  const hash = HashIt(request.body.password);
+  const hash = await HashIt(request.body.password);
 
   let obj = {
     name: request.body.name,
@@ -38,29 +38,33 @@ app.post("/signUp", async (request, response) => {
       }
     })
     .catch((err) => {
-      response.status(500).send(error);
+      response.send(err);
     });
 });
 
 app.post("/signIn", async (request, response) => {
   const users = await userModel.find({ email: request.body.email });
-  //console.log("Login user:  ", users);
-  var token = jwt.sign({ foo: "bar" }, "shhhhh", { expiresIn: "7Days" });
 
-  var Data = {
-    ...{ data: users[0] },
-    ...{ token: token },
-  };
-  const isTrue = CompareIt(request.body.password, users[0].password);
+  try {
+    var token = jwt.sign({ foo: "bar" }, "shhhhh", { expiresIn: "7Days" });
 
-  if (isTrue && users[0].email == request.body.email) {
-    response.send({
-      data: Data,
-      status: 1,
-      message: "Request successfuly hit",
-    });
-  } else {
-    response.send({ message: "Password is incorrect", status: 0 });
+    var Data = {
+      ...{ data: users[0] },
+      ...{ token: token },
+    };
+    const isTrue = await CompareIt(request.body.password, users[0].password);
+
+    if (isTrue && users[0].email == request.body.email) {
+      response.send({
+        data: Data,
+        status: 1,
+        message: "Request successfuly hit",
+      });
+    } else {
+      response.send({ message: "Password is incorrect", status: 0 });
+    }
+  } catch (err) {
+    response.send(err);
   }
 });
 
@@ -72,6 +76,31 @@ app.get("/users", async (request, response) => {
   } catch (error) {
     response.status(500).send(error);
   }
+});
+
+app.post("/SendOtp", async (req, res) => {
+  const { phone } = await req.body;
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const client = require("twilio")(accountSid, authToken);
+
+  client.verify.services
+    .create({ friendlyName: "My First Verify Service" })
+    .then((service) => {
+      client.verify
+        .services(service.sid)
+        .verifications.create({ to: phone, channel: "sms" })
+        .then((verification) => {
+          res.send(verification.status);
+          client.verify
+            .services(service.sid)
+            .verificationChecks.create({ to: phone, code: "123456" })
+            .then((verification_check) =>
+              console.log(verification_check.status)
+            );
+        });
+    });
 });
 
 module.exports = app;

@@ -47,13 +47,12 @@ app.post("/signIn", async (request, response) => {
 
   try {
     var token = jwt.sign({ foo: "bar" }, "shhhhh", { expiresIn: "7Days" });
-
     var Data = {
       ...{ data: users[0] },
       ...{ token: token },
     };
     const isTrue = await CompareIt(request.body.password, users[0].password);
-
+   
     if (isTrue && users[0].email == request.body.email) {
       response.send({
         data: Data,
@@ -64,7 +63,7 @@ app.post("/signIn", async (request, response) => {
       response.send({ message: "Password is incorrect", status: 0 });
     }
   } catch (err) {
-    response.send(err);
+    console.log("Error:   ", err);
   }
 });
 
@@ -81,6 +80,8 @@ app.get("/users", async (request, response) => {
 app.post("/SendOtp", async (req, res) => {
   const { phone } = await req.body;
 
+ 
+
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const client = require("twilio")(accountSid, authToken);
@@ -95,11 +96,16 @@ app.post("/SendOtp", async (req, res) => {
           res.send(verification.status);
           client.verify
             .services(service.sid)
-            .verificationChecks.create({ to: phone, code: "123456" })
+            .verificationChecks.create({ to: phone, code: "225534" })
             .then((verification_check) =>
-              console.log(verification_check.status)
+              
             );
         });
+    })
+    .catch((e) => {
+     
+      console.log(e);
+     
     });
 });
 
